@@ -18,6 +18,23 @@
                 //guardar los datos en la base
                 context.SaveChanges();
             }
+
+            if(!context.Accounts.Any())
+            {
+                Client facuClient = context.Clients.FirstOrDefault(cl => cl.Email == "facu@gmail.com");
+                if (facuClient!= null) 
+                {
+                    var facuAccounts = new Account[]
+                    {
+                        new Account{Number="VIN001", CreationDate=DateTime.Now,Balance=100000,ClientId=facuClient.Id},
+                        new Account{Number="VIN002", CreationDate=DateTime.Now,Balance=200000,ClientId=facuClient.Id},
+                    };
+
+                    context.Accounts.AddRange(facuAccounts);
+                    context.SaveChanges();
+                } 
+                
+            }
         }
     }
 }
