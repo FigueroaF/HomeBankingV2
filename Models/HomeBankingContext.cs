@@ -11,5 +11,8 @@ namespace HomeBankingV1.Models
         
         //registro de nueva tabla Account
         public DbSet<Account> Accounts { get; set; }
+        
+        //registro de una nueva tabla Transactions
+        public DbSet<Transaction> Transactions { get; set; }
     }
 }

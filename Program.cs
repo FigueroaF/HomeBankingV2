@@ -1,6 +1,7 @@
 using HomeBankingV1.Models;
 using HomeBankingV1.Repositories;
 using HomeBankingV1.Repositories.Implementations;
+using Microsoft.Build.Execution;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -13,6 +14,8 @@ builder.Services.AddDbContext<HomeBankingContext>(options => options.UseSqlServe
 
 //add repositories to the container
 builder.Services.AddScoped<IClientRepository, ClientRepository>();
+
+builder.Services.AddScoped<IAccountRepository, AccountRepository>();
 
 
 var app = builder.Build();
