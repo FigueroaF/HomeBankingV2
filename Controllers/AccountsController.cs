@@ -20,7 +20,7 @@ namespace HomeBankingV1.Controllers
         {
             try
             {
-                var accounts = _accountRepository.GetAllAccounts();
+                var accounts = _accountRepository.FindAllAccounts();
                 var accountsDTO = accounts.Select(c => new AccountDTO(c)).ToList();
                 return Ok(accountsDTO);
             }
@@ -31,11 +31,11 @@ namespace HomeBankingV1.Controllers
         }
 
         [HttpGet("{Id}")]
-        public IActionResult GetAccountsById()
+        public IActionResult GetAccountsById(long id)
         {
             try
             {
-                var accounts = _accountRepository.GetAccountById();
+                var accounts = _accountRepository.FindAccountById(id);
                 var accountsDTO = new AccountDTO(accounts);
                 return Ok(accountsDTO);
             }

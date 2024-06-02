@@ -3,25 +3,30 @@ using Microsoft.EntityFrameworkCore;
 
 namespace HomeBankingV1.Repositories
 {
-    public class AccountRepository : IAccountRepository
+    public class AccountRepository : RepositoryBase<Account>, IAccountRepository
     {
-        private HomeBankingContext _DbContext;
+        //private HomeBankingContext _DbContext;
 
-       public AccountRepository(HomeBankingContext dbContext)
+        public AccountRepository(HomeBankingContext dbContext) : base(dbContext)
         {
-            _DbContext = dbContext;
+           //dbContext = dbContext;
         }
-        public List<Account> GetAllAccounts()
+        public IEnumerable<Account> FindAllAccounts()
         {
-            return _DbContext.Accounts.ToList();
+            return FindAll()
+            .Include(a => a.Transaction)
+            .ToList();
         }
-        public Account GetAccountById(long accountid)
+        public Account FindAccountById(long accountid)
         {
-            return _DbContext.Accounts.FirstOrDefault(a => a.Id == accountid);
+            return FindByCondition(a => a.Id == accountid)
+            .Include(a => a.Transaction)
+            .FirstOrDefault();
+
 
         }
 
-        public Account GetAccountById()
+        public void Save(Account account)
         {
             throw new NotImplementedException();
         }

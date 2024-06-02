@@ -8,5 +8,7 @@
         public double Balance { get; set; }
         public Client Client { get; set; }
         public long ClientId { get; set; }
+        public ICollection<Transaction> Transaction { get; set; }
+        
     }
 }

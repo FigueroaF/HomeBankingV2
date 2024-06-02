@@ -15,6 +15,7 @@ namespace HomeBankingV1.DTOS
            Number = account.Number;
            CreationDate = account.CreationDate;
            Balance = account.Balance;
+           Transactions = account.Transaction.Select(t => new TransactionDTO(t)).ToList();
         }
     }
 }
