@@ -20,5 +20,8 @@ namespace HomeBankingV1.Models
 
         //registro de una nueva tabla ClientLoan
         public DbSet<ClientLoan> ClientLoans { get; set; }
+        
+        //registro de una nueva tabla Card
+        public DbSet<Card> Cards { get; set; }
     }
 }

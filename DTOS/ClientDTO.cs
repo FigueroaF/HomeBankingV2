@@ -12,6 +12,7 @@ namespace HomeBankingV1.DTOS
         public string Email { get; set; }
         public ICollection<ClientAccountDTO> Accounts { get; set; }
         public ICollection<ClientLoanDTO> Loans { get; set; }
+        public ICollection<CardDTO> Cards { get; set; }
         public ClientDTO(Client client)
         {
             Id = client.Id;
@@ -27,7 +28,19 @@ namespace HomeBankingV1.DTOS
                 Amount = cl.Amount,
                 Payments = int.Parse(cl.Payments)}).ToList();
             }
+            Cards = client.Cards.Select(c => new CardDTO
+            {
+                Id = c.Id,
+                CardHolder = c.CardHolder,
+                Color = c.Color,
+                Cvv = c.Cvv,
+                FromDate = c.FromDate,
+                Number = c.Number,
+                ThruDate = c.ThruDate,
+                Type = c.Type
+            }).ToList();
+            }
         }
     }
-}
+
 
