@@ -342,5 +342,47 @@ namespace HomeBankingV1.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
         }
+
+        [HttpGet("current/accounts")]
+        [Authorize(Policy = "ClientOnly")]
+        public IActionResult GetTransferAccounts(string clientEmail)
+        {
+            try
+            {
+
+
+                //obtenemos el cliente por email
+                string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
+                if (string.IsNullOrEmpty(email))
+                {
+                    return Forbid("No se pudo obtener el email del cliente autenticado.");
+                }
+
+                // Obtener el cliente por email
+                var client = _clientRepository.FindByEmail(email);
+                if (client == null)
+                {
+                    return NotFound("Cliente no encontrado");
+                }
+
+                // Obtener las cuentas del cliente
+                var accounts = _accountRepository.GetAccountsByClient(client.Id).ToList();
+
+                //retornamos las cuentas disponibles para la transferencia
+                var transferAccountsDTO = accounts.Select(a => new AccountDTO(a)).ToList();
+                //{
+                //    Id = a.Id,
+                //    Number = a.Number,
+                //    Balance = a.Balance,
+                //}).ToList();
+
+                return Ok(transferAccountsDTO);
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            }
+
+        }
     }
 }       

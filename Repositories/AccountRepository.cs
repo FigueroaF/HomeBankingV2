@@ -51,5 +51,12 @@ namespace HomeBankingV1.Repositories
             .ToList();
 
         }
+
+        public Account FindByNumber(string Number) 
+        {
+            return FindByCondition(account => account.Number.ToUpper() == Number.ToUpper())
+                .Include(account => account.Transaction)
+                .FirstOrDefault();
+        }
     }
 }
