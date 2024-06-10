@@ -7,5 +7,6 @@ namespace HomeBankingV1.Repositories
         IEnumerable<Account> FindAllAccounts(); 
         Account FindAccountById(long accountId);
        void Save(Account account);
+        IEnumerable<Account> GetAccountsByClient(long clientId);
     }
 }

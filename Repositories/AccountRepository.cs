@@ -28,7 +28,28 @@ namespace HomeBankingV1.Repositories
 
         public void Save(Account account)
         {
-            throw new NotImplementedException();
+            if (account.Id == 0)
+            {
+                Create(account);
+            }
+            else
+            {
+                Update(account);
+            }
+            SaveChanges();
+            RepositoryContext.ChangeTracker.Clear();
+        }
+
+        public IEnumerable<Account> GetAccountsByClient(long clientId)
+
+        {
+
+            return FindByCondition(account => account.ClientId == clientId)
+
+            .Include(account => account.Transaction)
+
+            .ToList();
+
         }
     }
 }

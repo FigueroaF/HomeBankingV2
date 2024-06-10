@@ -1,5 +1,8 @@
 ﻿using HomeBankingV1.DTOS;
+using HomeBankingV1.Models;
 using HomeBankingV1.Repositories;
+using HomeBankingV1.Repositories.Implementations;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 
@@ -10,9 +13,11 @@ namespace HomeBankingV1.Controllers
     public class AccountsController : ControllerBase
     {
         private readonly IAccountRepository _accountRepository;
-        public AccountsController(IAccountRepository accountRepository)
+        private readonly IClientRepository _clientRepository;
+        public AccountsController(IAccountRepository accountRepository, IClientRepository clientRepository)
         {
             _accountRepository = accountRepository;
+            _clientRepository = clientRepository;
         }
 
         [HttpGet]
@@ -44,7 +49,16 @@ namespace HomeBankingV1.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
         }
+        // Método para generar un número de cuenta único
+        private string GenerateUniqueAccountNumber()
+        {
+            string accountNumber;
+            do
+            {
+                accountNumber = "VIN-" + new Random().Next(10000000, 99999999).ToString();
+            } while (_accountRepository.FindAllAccounts().Any(a => a.Number == accountNumber));
 
-
+            return accountNumber;
+        }
     }
 }
