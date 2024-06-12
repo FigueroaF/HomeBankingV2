@@ -11,6 +11,6 @@
         public Loan Loan { get; set; }
 
 
-        
+
     }
 }

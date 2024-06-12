@@ -7,6 +7,6 @@
         public double MaxAmount { get; set; }
         public string Payments { get; set; }
         public ICollection<ClientLoan> ClientLoans { get; set; }
-
+        
     }
 }

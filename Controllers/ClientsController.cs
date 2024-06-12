@@ -18,11 +18,16 @@ namespace HomeBankingV1.Controllers
         private readonly IClientRepository _clientRepository;
         private readonly ICardRepository _cardRepository;
         private readonly IAccountRepository _accountRepository;
-        public ClientsController(IClientRepository clientRepository, ICardRepository cardRepository, IAccountRepository accountRepository)
+        private readonly ILoanRepository _loanRepository;
+        private readonly IClientLoanRepository _clientLoanRepository;
+        public ClientsController(IClientRepository clientRepository, ICardRepository cardRepository,
+            IAccountRepository accountRepository, ILoanRepository loanRepository, IClientLoanRepository clientLoanRepository)
         {
             _clientRepository = clientRepository;
             _cardRepository = cardRepository;
             _accountRepository = accountRepository;
+            _loanRepository = loanRepository;
+            _clientLoanRepository = clientLoanRepository;
         }
 
 
@@ -144,17 +149,7 @@ namespace HomeBankingV1.Controllers
             {
                 return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
-            // Método para generar un número de cuenta único
-            //private string GenerateUniqueAccountNumber()
-            //{
-            //    string accountNumber;
-            //    do
-            //    {
-            //        accountNumber = "VIN-" + new Random().Next(10000000, 99999999).ToString();
-            //    } while (_accountRepository.FindAllAccounts().Any(a => a.Number == accountNumber));
-
-            //    return accountNumber;
-            //}
+         
         }
 
 
@@ -202,11 +197,7 @@ namespace HomeBankingV1.Controllers
                 return Forbid();
             }
 
-            //var cards = _cardRepository.GetCardsByClient(client.Id).ToList();
-            //if (cards.Count >= 6)
-            //{
-            //    return StatusCode(StatusCodes.Status403Forbidden, "El cliente ya tiene 6 tarjetas registradas");
-            //}
+
             var cards = _cardRepository.GetCardsByClient(client.Id).ToList();
             var debitCardsCount = cards.Count(c => c.Type == "debit");
             var creditCardsCount = cards.Count(c => c.Type == "credit");
@@ -383,6 +374,92 @@ namespace HomeBankingV1.Controllers
                 return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
             }
 
+        }
+
+        [HttpPost("loans")]
+        [Authorize(Policy = "ClientOnly")]
+        public IActionResult ApplyForLoan([FromBody] LoanApplicationDTO loanAppDTO) 
+        {
+            try 
+            {
+                //verificamos que el usuario este autenticado  
+                string email = User.FindFirst("Client") != null ? User.FindFirst("Client").Value : string.Empty;
+                if (string.IsNullOrEmpty(email)) 
+                {
+                    return Unauthorized("Usuario no Autenticado");
+                }
+
+                // Buscamos el cliente por su email para obtener su ID
+                var client = _clientRepository.FindByEmail(email);
+                if (client == null)
+                {
+                    return Unauthorized("Usuario no encontrado");
+                }
+
+                //verificamos que el prestamo exista
+                var loan = _loanRepository.FindById(loanAppDTO.LoanId);
+                if (loan == null) 
+                {
+                    return Forbid("Prestamo no encontrado");
+                }
+
+                //verificamos que el monto no sea 0 y que no sobrepase el maximo autorizado 
+                if(loanAppDTO.Amount <= 0 ||  loanAppDTO.Amount > loan.MaxAmount) 
+                {
+                    return Forbid("Monto invalido");
+                }
+
+                //verificamos que los pagos no lleguen vacios y esten dentro del rango permitido
+                //if (loanAppDTO.Payments <= 0 || loanAppDTO.Payments < loan.Payments || loanAppDTO.Payments > loan.Payments)
+                if (string.IsNullOrEmpty(loanAppDTO.Payments) ||
+                    !int.TryParse(loanAppDTO.Payments, out int paymentCount) ||
+                    paymentCount <= 0)
+                {
+                    return Forbid("Cantidad de cuotas invalida"); //REVISAR
+                }
+
+                //verificamos que la cuenta de destino exista 
+                var account = _accountRepository.FindByNumber(loanAppDTO.ToAccountNumber);
+                if (account == null)
+                {
+                    return Forbid("Cuenta de destino no encontrada");
+                }
+
+                //creamos la solicitud de prestamo con un 20% mas del monto 
+                var AmountInterest = loanAppDTO.Amount * 1.20;
+                var clientLoan = new ClientLoan
+                {
+                    LoanId = loan.Id,
+                    ClientId = client.Id,
+                    Amount = AmountInterest,
+                    Payments = loanAppDTO.Payments,
+                };
+                _clientLoanRepository.Save(clientLoan);
+
+                //actualizamos el balance de la cuenta sumando el monto del prestamo
+                account.Balance += AmountInterest;
+                _accountRepository.Update(account);
+
+                return StatusCode(StatusCodes.Status201Created, "Prestamo aprobado y Cuenta actualizada");
+            }
+            catch (Exception e) 
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message);
+            }
+        }
+
+        [HttpGet("{id}")] 
+        public IActionResult GetAvailableLoans(long id)
+        {
+            try
+            {
+                var loans = _loanRepository.FindById(id); // Obtenemos todos los préstamos disponibles desde el repositorio de préstamos
+                return Ok(loans); // Devolvemos la lista de préstamos como respuesta HTTP 200 OK
+            }
+            catch (Exception e)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, e.Message); // Manejamos cualquier error y devolvemos un StatusCode 500 en caso de que falle
+            }
         }
     }
 }       
